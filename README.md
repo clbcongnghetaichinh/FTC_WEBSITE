@@ -1,137 +1,142 @@
 # FTC Website - Câu lạc bộ Công nghệ Tài chính
 
-Website chính thức của Câu lạc bộ Công nghệ Tài chính (FTC) - Nơi kết nối những người đam mê fintech tại Trường Đại học Kinh tế – Luật, ĐHQG-HCM.
+Website chính thức của Câu lạc bộ Công nghệ Tài chính (FTC) — nơi kết nối những người đam mê FinTech tại Trường Đại học Kinh tế và Luật, ĐHQG-HCM.
 
 ## 🚀 Tính năng chính
 
-- **Trang chủ**: Giới thiệu về câu lạc bộ với thiết kế hiện đại và responsive
+- **Trang chủ**: Giới thiệu về câu lạc bộ với thiết kế hiện đại, responsive
 - **Thông tin**: Thông tin chi tiết về câu lạc bộ, cơ cấu tổ chức
 - **Thành tích**: Những thành tựu nổi bật của câu lạc bộ
 - **Hoạt động**: Các sự kiện và hoạt động thú vị
 - **Ứng tuyển**: Form đăng ký tham gia câu lạc bộ
-- **Diễn đàn**: Nơi thảo luận và chia sẻ kiến thức với hệ thống đăng nhập/đăng ký
-- **Chatbot AI**: Trợ lý thông minh hỗ trợ tư vấn về FTC và FinTech, hoạt động 24/7
+- **Diễn đàn**: Nơi thảo luận và chia sẻ kiến thức, có hệ thống đăng nhập/đăng ký
+- **Chatbot AI**: Trợ lý thông minh hỗ trợ tư vấn về FTC và FinTech
 
 ## 🛠️ Công nghệ sử dụng
 
 ### Frontend
-- **Next.js 15** (App Router) + **React 18** + **TypeScript**
-- **Tailwind CSS 4** — styling responsive
-- **shadcn/ui** + **Radix UI** — UI components
-- **Zustand** — state management (auth)
-- **React Hook Form** + **Zod** — form validation
-
-### Backend & Database
-- **Next.js API Routes** — `/api/chat`, `/api/forum`, `/api/knowledge`
-- **Supabase** — database chính (đã thay thế Google Sheets)
-- **Python** (Flask) — backend phụ trợ, port 5000, JWT auth
+| Công nghệ | Vai trò |
+|-----------|----------|
+| **Next.js 15** (App Router) | Framework chính |
+| **React 18** + **TypeScript** | UI & type safety |
+| **Tailwind CSS 4** | Styling, responsive |
+| **shadcn/ui** + Radix UI | UI components |
+| **Zustand** | State management (auth) |
+| **React Hook Form** + Zod | Form validation |
 
 ### AI & Chatbot
-- **Google Gemini API** (`gemini-2.0-flash`) — mô hình ngôn ngữ cho chatbot
-- **Genkit** (`@genkit-ai/core`, `@genkit-ai/googleai`) — AI pipeline/orchestration
-- **RAG System** — Retrieval-Augmented Generation từ knowledge base nội bộ
-- **FAQ Matching** — keyword index + Jaccard similarity cho câu hỏi thường gặp
+| Công nghệ | Vai trò |
+|-----------|----------|
+| **Google Gemini API** (`gemini-2.0-flash`) | Sinh câu trả lời AI |
+| **Genkit** (`@genkit-ai/core`, `@genkit-ai/googleai`) | AI pipeline/orchestration |
+| **Notion API** | Knowledge base bổ trợ |
+
+### Backend & Database
+| Công nghệ | Vai trò |
+|-----------|----------|
+| **Next.js API Routes** | `/api/chat`, `/api/forum`, `/api/knowledge` |
+| **Supabase** | Database chính (PostgreSQL) |
+| **Python** (FastAPI/Flask) | Backend phụ trợ — port 5000, JWT auth |
 
 ### Dev & Deploy
-- **pnpm 10** — package manager
-- **Vercel** — deployment
-- **Docker** — containerization
-- **Node.js 18–22**
+| Công nghệ | Vai trò |
+|-----------|----------|
+| **pnpm 10** | Package manager |
+| **Vercel** | Deployment (recommended) |
+| **Docker** | Containerization |
+| **Node.js 18–22** | Runtime |
 
 ## 📁 Cấu trúc dự án
 
 ```
 ├── app/                        # Next.js App Router
 │   ├── api/
-│   │   ├── chat/               # Chatbot API (Gemini + FAQ matching)
+│   │   ├── chat/               # Chatbot AI endpoint (Gemini + FAQ)
 │   │   ├── forum/              # Forum API proxy
 │   │   └── knowledge/          # Knowledge base API
 │   ├── chatbot/                # Trang chatbot
-│   ├── dien-dan/ & forum/      # Diễn đàn thảo luận
-│   ├── thong-tin/              # Thông tin câu lạc bộ
-│   ├── thanh-tich/             # Thành tích
+│   ├── co-cau/                 # Cơ cấu tổ chức
+│   ├── dien-dan/               # Diễn đàn thảo luận
+│   ├── forum/[id]/             # Chi tiết bài đăng
 │   ├── hoat-dong/              # Hoạt động
-│   ├── ung-tuyen/              # Ứng tuyển
-│   └── co-cau/                 # Cơ cấu tổ chức
+│   ├── thanh-tich/             # Thành tích
+│   ├── thong-tin/              # Thông tin CLB
+│   └── ung-tuyen/              # Ứng tuyển
 ├── backend/                    # Python backend phụ trợ
 │   └── config/supabase/        # Supabase config
-├── chatbot/                    # Chatbot router & type definitions
+├── chatbot/                    # Chatbot logic riêng
 ├── components/
 │   ├── auth/                   # Authentication forms
 │   ├── forum/                  # Forum components
 │   └── ui/                     # shadcn/ui components
 ├── context/                    # React Context (AuthContext)
-├── knowledge_base/             # Dữ liệu RAG cho chatbot
+├── knowledge_base/             # Dữ liệu tri thức cho chatbot
 │   ├── faq/                    # Câu hỏi thường gặp
-│   ├── ftc/                    # Thông tin CLB (general, departments, activities)
-│   └── fintech/                # Kiến thức FinTech cơ bản
+│   ├── ftc/                    # Thông tin về FTC
+│   └── fintech/                # Kiến thức FinTech
 ├── lib/                        # Utilities & API clients
-├── prompts/                    # System prompts cho Gemini
+│   ├── forumApi.ts             # Forum API client
+│   ├── forumClient.ts          # HTTP client cho forum
+│   └── ...
 ├── types/                      # TypeScript type definitions
 └── public/                     # Static assets
 ```
 
 ## 🚀 Cài đặt và chạy
 
-1. **Clone repository**
-   ```bash
-   git clone https://github.com/TranThanhPhu39/FTC_WEBSITE_V2.git
-   cd FTC_WEBSITE_V2
-   ```
+### 1. Clone repository
+```bash
+git clone https://github.com/TranThanhPhu39/FTC_WEBSITE_V2.git
+cd FTC_WEBSITE_V2
+```
 
-2. **Cài đặt dependencies**
-   ```bash
-   pnpm install
-   ```
+### 2. Cài đặt dependencies
+```bash
+pnpm install
+```
 
-3. **Cấu hình environment variables**
-   ```bash
-   cp .env.example .env.local
-   ```
+### 3. Cấu hình environment variables
+```bash
+cp .env.example .env.local
+```
 
-   Cập nhật các biến môi trường:
-   ```env
-   GEMINI_API_KEY=           # API key cho Google Gemini
-   GEMINI_MODEL=             # Mặc định: gemini-2.0-flash
-   NEXT_PUBLIC_FORUM_API_URL=    # URL API cho forum (Supabase endpoint)
-   NEXT_PUBLIC_FORUM_API_TOKEN=  # Token xác thực API forum
-   ```
+Cập nhật các biến môi trường:
 
-4. **Chạy development server**
-   ```bash
-   pnpm dev
-   ```
+| Biến | Mô tả |
+|------|-------|
+| `GEMINI_API_KEY` | API key cho Google Gemini AI |
+| `GEMINI_MODEL` | Model Gemini (mặc định: `gemini-2.0-flash`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL Supabase project |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key Supabase |
+| `NEXT_PUBLIC_FORUM_API_URL` | URL API cho forum |
+| `NEXT_PUBLIC_FORUM_API_TOKEN` | Token xác thực forum API |
+| `NOTION_API_KEY` | API key Notion (tùy chọn) |
+| `GOOGLE_API_KEY` | Google API key (tùy chọn) |
 
-5. **Mở trình duyệt**
-   Truy cập [http://localhost:3000](http://localhost:3000)
+### 4. Chạy development server
+```bash
+pnpm dev
+```
+
+### 5. Mở trình duyệt
+Truy cập [http://localhost:3000](http://localhost:3000)
 
 ## 🌐 Deployment
 
 ### Vercel (Khuyến nghị)
-
 1. Fork repository này
 2. Kết nối với Vercel
 3. Cấu hình environment variables trong Vercel Dashboard
 4. Deploy tự động khi push lên `main`
 
-## 🤖 Kiến trúc Chatbot
-
-Chatbot hoạt động theo 2 mode:
-
-- **Club mode**: Trả lời câu hỏi về FTC (cơ cấu, hoạt động, tuyển dụng...). Ưu tiên FAQ matching nội bộ trước, sau đó mới gọi Gemini với system prompt cụ thể.
-- **Industry mode**: Trả lời câu hỏi tổng quát về FinTech (khái niệm, xu hướng, công nghệ...).
-
-Mode được tự động phát hiện qua keyword matching (normalize + từ khóa tiếng Việt không dấu).
+### Docker
+```bash
+docker compose -f docker/docker-compose.yml up
+```
 
 ## 🤝 Đóng góp
 
 Mọi đóng góp đều được chào đón! Hãy tạo issue hoặc pull request.
-
-## 📞 Liên hệ
-
-- **Website**: [https://ftc-website.vercel.app](https://ftc-website.vercel.app)
-- **Fanpage**: [https://www.facebook.com/clbfintechuel](https://www.facebook.com/clbfintechuel)
-- **Email**: clbcongnghetaichinh@st.uel.edu.vn
 
 ## 📄 License
 
