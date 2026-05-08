@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* ── Light mode (fallback) ── */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -40,39 +41,61 @@
 }
 
 .dark {
-  /* Blue-black modern palette */
-  --background: #071025; /* deep navy */
-  --foreground: #cfe8ff; /* pale sky */
-  --card: #071423; /* darker card */
-  --card-foreground: #e6f4ff; /* card text */
-  --popover: #071423;
-  --popover-foreground: #e6f4ff;
-  --primary: #6366F1; /* indigo */
-  --primary-foreground: #061028;
-  --secondary: #4F46E5; /* indigo-600 */
-  --secondary-foreground: #e6f4ff;
-  --muted: #071425;
-  --muted-foreground: #9ccfff;
-  --accent: #10B981; /* emerald */
-  --accent-foreground: #e6fff6;
-  --destructive: #7c2d2d;
-  --destructive-foreground: #ffdad4;
-  --border: #072033;
-  --input: #072033;
-  --ring: #075985;
-  --chart-1: #0fb6ff;
-  --chart-2: #1e90ff;
-  --chart-3: #2bb6c5;
-  --chart-4: #1666b8;
-  --chart-5: #2a9d8f;
-  --sidebar: #06131e;
-  --sidebar-foreground: #cfe8ff;
-  --sidebar-primary: #0EA5FF;
-  --sidebar-primary-foreground: #e6f4ff;
-  --sidebar-accent: #064e72;
-  --sidebar-accent-foreground: #d0f0ff;
-  --sidebar-border: #072033;
-  --sidebar-ring: #075985;
+  /* ════════════════════════════════════════
+     Dark crypto theme — deep black-navy
+     with electric cyan / blue neon accents
+     (inspired by Dipoleswap UI)
+     ════════════════════════════════════════ */
+
+  /* Backgrounds */
+  --background:         #03060f;   /* near-black with blue tint */
+  --card:               #060d1e;   /* dark navy card */
+  --popover:            #060d1e;
+  --muted:              #0a1428;
+  --sidebar:            #040b18;
+
+  /* Text */
+  --foreground:         #d4eeff;   /* soft cyan-white */
+  --card-foreground:    #e0f2ff;
+  --popover-foreground: #e0f2ff;
+  --muted-foreground:   #5da8d4;   /* muted cyan */
+  --sidebar-foreground: #b8dff5;
+
+  /* Primary — electric cyan (button, link, highlight) */
+  --primary:            #00c8ff;   /* bright cyan like the glow in image */
+  --primary-foreground: #03060f;
+
+  /* Secondary — deeper blue */
+  --secondary:          #0a3a6e;
+  --secondary-foreground: #d4eeff;
+
+  /* Accent — neon teal/cyan glow */
+  --accent:             #00e5ff;
+  --accent-foreground:  #03060f;
+
+  /* Borders & inputs */
+  --border:             #0d2a4a;
+  --input:              #0a1e38;
+  --ring:               #00c8ff66;  /* cyan glow ring */
+
+  /* Destructive */
+  --destructive:        #7c1d1d;
+  --destructive-foreground: #ffd4d4;
+
+  /* Charts — blue/cyan family */
+  --chart-1:            #00c8ff;
+  --chart-2:            #0ea5e9;
+  --chart-3:            #38bdf8;
+  --chart-4:            #0369a1;
+  --chart-5:            #00e5c3;
+
+  /* Sidebar */
+  --sidebar-primary:          #00c8ff;
+  --sidebar-primary-foreground: #03060f;
+  --sidebar-accent:            #0a2040;
+  --sidebar-accent-foreground: #b8dff5;
+  --sidebar-border:            #0d2a4a;
+  --sidebar-ring:              #00c8ff66;
 }
 
 @theme inline {
@@ -119,20 +142,38 @@
     @apply border-border outline-ring/50;
   }
   html {
-    -webkit-text-size-adjust: 100%; /* Prevent font-size adjustments after orientation changes in iOS */
+    -webkit-text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground;
   }
 
-  /* Make media elements responsive */
+  /* ── Neon glow helpers ── */
+  .glow-cyan {
+    box-shadow: 0 0 12px 2px #00c8ff55, 0 0 32px 4px #00c8ff22;
+  }
+  .glow-blue {
+    box-shadow: 0 0 12px 2px #0ea5e955, 0 0 32px 4px #0ea5e922;
+  }
+  .text-glow-cyan {
+    text-shadow: 0 0 10px #00c8ffaa, 0 0 24px #00c8ff55;
+  }
+
+  /* ── Subtle radial background gradient ── */
+  body.dark,
+  .dark body {
+    background-image:
+      radial-gradient(ellipse 80% 40% at 60% 0%, #001a3a55 0%, transparent 70%),
+      radial-gradient(ellipse 60% 30% at 10% 80%, #00102a33 0%, transparent 60%);
+  }
+
+  /* Media responsive */
   img, video, svg {
     max-width: 100%;
     height: auto;
     display: block;
   }
 
-  /* Utility responsive container to ensure consistent padding across viewports */
   .responsive-container {
     max-width: 1200px;
     margin-left: auto;
@@ -141,7 +182,6 @@
     padding-right: 1rem;
   }
 
-  /* Ensure interactive elements adapt on small screens */
   button, input, textarea, select {
     max-width: 100%;
   }
