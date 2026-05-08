@@ -4,8 +4,8 @@ import { Montserrat } from "next/font/google"
 import { Suspense } from "react"
 import Script from "next/script"
 import { ClientWrapper } from "@/app/providers/client-wrapper"
+import { AuthProvider } from "@/context/AuthContext"
 import "./globals.css"
-
 const montserrat = Montserrat({
   subsets: ["latin", "vietnamese"],
   display: "swap",
@@ -61,31 +61,34 @@ export default function RootLayout({
         />
       </head>
       <body className={`${montserrat.className} ${montserrat.variable}`} suppressHydrationWarning>
-        <ClientWrapper>
-          <Suspense fallback={null}>{children}</Suspense>
-          {process.env.NODE_ENV === "development" && (
-            <Script id="suppress-clipboard-policy-error" strategy="afterInteractive">
-              {`
-                (function(){
-                  try {
-                    window.addEventListener('unhandledrejection', function(e){
-                      var msg = String((e && e.reason && (e.reason.message || e.reason)) || '');
-                      if (msg.includes('Clipboard API has been blocked') || msg.includes('permissions policy') || msg.includes('NotAllowedError')) {
-                        e.preventDefault();
-                      }
-                      if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ECONNREFUSED')) {
-                        if (location && location.hostname && (location.hostname.endsWith('.fly.dev') || location.hostname === 'localhost' || location.hostname.includes('vercel'))) {
-                          console.warn('Suppressed dev network error:', msg);
+        {/* Bọc toàn bộ giao diện bằng AuthProvider để cấp tài khoản khách */}
+        <AuthProvider>
+          <ClientWrapper>
+            <Suspense fallback={null}>{children}</Suspense>
+            {process.env.NODE_ENV === "development" && (
+              <Script id="suppress-clipboard-policy-error" strategy="afterInteractive">
+                {`
+                  (function(){
+                    try {
+                      window.addEventListener('unhandledrejection', function(e){
+                        var msg = String((e && e.reason && (e.reason.message || e.reason)) || '');
+                        if (msg.includes('Clipboard API has been blocked') || msg.includes('permissions policy') || msg.includes('NotAllowedError')) {
                           e.preventDefault();
                         }
-                      }
-                    });
-                  } catch(_) {}
-                })();
-              `}
-            </Script>
-          )}
-        </ClientWrapper>
+                        if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ECONNREFUSED')) {
+                          if (location && location.hostname && (location.hostname.endsWith('.fly.dev') || location.hostname === 'localhost' || location.hostname.includes('vercel'))) {
+                            console.warn('Suppressed dev network error:', msg);
+                            e.preventDefault();
+                          }
+                        }
+                      });
+                    } catch(_) {}
+                  })();
+                `}
+              </Script>
+            )}
+          </ClientWrapper>
+        </AuthProvider>
       </body>
     </html>
   )

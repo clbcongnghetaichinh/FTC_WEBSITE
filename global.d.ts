@@ -1,3 +1,5 @@
+/// <reference types="react" />
+/// <reference types="react-dom" />
 // global.d.ts
 import { AriaAttributes, DOMAttributes } from 'react'
 
@@ -8,3 +10,4 @@ import { AriaAttributes, DOMAttributes } from 'react'
 //     }
 //   }
 // }
+declare module '*.css';

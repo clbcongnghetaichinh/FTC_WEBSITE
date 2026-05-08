@@ -11,19 +11,17 @@ export default function NewResponseForm({ questionId, onCreated }:{ questionId: 
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea like Facebook
+  // Căn chỉnh tự động chiều cao khung nhập liệu (giống Facebook)
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      // Reset height to auto to get the correct scrollHeight
       textarea.style.height = 'auto';
-      // Set height to scrollHeight to fit content
-      const newHeight = Math.min(textarea.scrollHeight, 200); // Max height 200px
+      const newHeight = Math.min(textarea.scrollHeight, 200); // Tối đa 200px
       textarea.style.height = `${newHeight}px`;
     }
   }, [content]);
 
-  // Handle Enter key for better UX
+  // Xử lý phím Enter để gửi nhanh
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -33,22 +31,41 @@ export default function NewResponseForm({ questionId, onCreated }:{ questionId: 
     }
   };
 
+  // --- HÀM GỬI DỮ LIỆU ĐÃ ĐƯỢC "BỌC THÉP" ---
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if(!user) return alert("Vui lòng đăng nhập.");
+    if(!user) return alert("Vui lòng đăng nhập để bình luận.");
     if(!content.trim()) return;
     
     setLoading(true);
-    const res = await ForumApi.createResponse({ user: user.mssv, anonymous, content, questionId });
-    if(res.ok) { 
-      setContent(""); 
-      // Reset textarea height
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+    try {
+      // Dùng user.userId thay vì user.mssv để tránh lỗi Foreign Key với tài khoản Khách
+      const res = await ForumApi.createResponse({ 
+        user: user.userId, 
+        anonymous, 
+        content, 
+        questionId 
+      });
+      
+      if(res && res.ok) { 
+        // Gửi thành công -> Dọn dẹp ô nhập liệu
+        setContent(""); 
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
+        onCreated?.(); // Báo cho component cha tải lại danh sách bình luận
+      } else {
+        // Có lỗi từ Supabase -> In ra Console và hiện cảnh báo
+        console.error("Chi tiết lỗi từ Supabase:", res);
+        alert("Không thể gửi bình luận! Lỗi: " + (res?.error?.message || res?.error || res?.message || "Bị khóa bởi phân quyền RLS."));
       }
-      onCreated?.(); 
+    } catch (error: any) {
+      // Bắt các lỗi đứt mạng, sập server...
+      console.error("Lỗi hệ thống:", error);
+      alert("Đã xảy ra lỗi hệ thống: " + error.message);
+    } finally {
+      setLoading(false); // Luôn luôn tắt hiệu ứng loading dù thành công hay thất bại
     }
-    setLoading(false);
   }
 
   return (

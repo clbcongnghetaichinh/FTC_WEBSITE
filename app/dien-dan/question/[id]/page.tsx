@@ -1,6 +1,8 @@
 "use client";
+
+import { use } from "react"; // Đã thêm hàm use() cho Next.js 15
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ForumApi } from "@/lib/forumApi";
 import type { QuestionItem } from "@/types/forum";
 import NewResponseForm from "@/components/forum/NewResponseForm";
@@ -18,7 +20,10 @@ function DetailInner({ questionId }: { questionId: string }) {
     setQ(found);
     setLoading(false);
   }
-  useEffect(() => { if(questionId) load(); }, [questionId]);
+  
+  useEffect(() => { 
+    if(questionId) load(); 
+  }, [questionId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#003663] via-[#004a7c] to-[#003663] text-white">
@@ -206,10 +211,14 @@ function DetailInner({ questionId }: { questionId: string }) {
   );
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+// --- PHẦN CODE ĐÃ ĐƯỢC CHỈNH SỬA CHO NEXT.JS 15 ---
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  // Giải nén params bằng hàm use()
+  const resolvedParams = use(params);
+
   return (
     <AuthProvider>
-      <DetailInner questionId={params.id} />
+      <DetailInner questionId={resolvedParams.id} />
     </AuthProvider>
   );
 }

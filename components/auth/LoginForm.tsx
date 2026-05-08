@@ -1,252 +1,81 @@
 "use client";
-import { useState } from "react";
-import { ForumApi } from "@/lib/forumApi";
-import { useAuth } from "@/context/AuthContext";
+import React, { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginForm() {
-  const { setUser } = useAuth();
-  const [mssv, setMssv] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotPasswordStep, setForgotPasswordStep] = useState<'email' | 'questions' | 'reset'>('email');
-  const [forgotPasswordData, setForgotPasswordData] = useState({
-    mssv: '',
-    questions: [] as string[],
-    answers: { a1: '', a2: '', a3: '' },
-    newPassword: ''
-  });
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true); setErr("");
+  async function handleGoogleLogin() {
+    setLoading(true);
+    setErr("");
     try {
-      const res = await ForumApi.login({ mssv, password });
-      if (!res.ok) throw new Error(res.message || "Đăng nhập thất bại");
-      const u = res.data!;
-      setUser({ userId: u.userId, mssv: u.mssv, full_name: u.full_name, email: u.email });
-    } catch (e:any) { setErr(e.message); }
-    setLoading(false);
-  }
-
-  async function handleForgotPassword() {
-    setLoading(true); setErr("");
-    try {
-      const res = await ForumApi.forgotPasswordGetQuestions({ mssv: forgotPasswordData.mssv });
-      if (!res.ok) throw new Error(res.message || "Không thể lấy câu hỏi bảo mật");
-      setForgotPasswordData({ ...forgotPasswordData, questions: res.data!.questions });
-      setForgotPasswordStep('questions');
-    } catch (e:any) { setErr(e.message); }
-    setLoading(false);
-  }
-
-  async function handleResetPassword() {
-    setLoading(true); setErr("");
-    try {
-      const res = await ForumApi.forgotPasswordReset({
-        mssv: forgotPasswordData.mssv,
-        answers: forgotPasswordData.answers,
-        new_password: forgotPasswordData.newPassword
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          // Nơi web sẽ chuyển hướng về sau khi đăng nhập Google thành công
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-      if (!res.ok) throw new Error(res.message || "Đặt lại mật khẩu thất bại");
-      setShowForgotPassword(false);
-      setForgotPasswordStep('email');
-      setForgotPasswordData({ mssv: '', questions: [], answers: { a1: '', a2: '', a3: '' }, newPassword: '' });
-      setErr(""); // Clear any errors
-    } catch (e:any) { setErr(e.message); }
-    setLoading(false);
-  }
 
-  if (showForgotPassword) {
-    return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">🔑</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white">Quên mật khẩu</h3>
-          <p className="text-blue-200 mt-2">Khôi phục tài khoản của bạn</p>
-        </div>
-
-        {/* Forgot Password Steps */}
-        {forgotPasswordStep === 'email' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-blue-200 mb-2">
-                Hãy nhập mã số sinh viên của bạn
-              </label>
-              <input 
-                className="w-full border-2 border-blue-400/30 rounded-lg p-3 bg-[#003663]/50 text-white placeholder-blue-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200" 
-                placeholder="Nhập MSSV (VD: K225123456)" 
-                value={forgotPasswordData.mssv} 
-                onChange={e=>setForgotPasswordData({...forgotPasswordData, mssv: e.target.value})} 
-              />
-            </div>
-            
-            <div className="flex gap-3">
-              <button 
-                type="button"
-                onClick={() => setShowForgotPassword(false)}
-                className="flex-1 px-4 py-2 bg-slate-600/50 text-slate-300 rounded-lg font-semibold hover:bg-slate-500/50 transition-all duration-200"
-              >
-                Quay lại
-              </button>
-              <button 
-                type="button"
-                onClick={handleForgotPassword}
-                disabled={loading || !forgotPasswordData.mssv}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Đang xử lý..." : "Tiếp tục"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {forgotPasswordStep === 'questions' && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-400/30 rounded-xl p-6">
-              <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                <span className="text-orange-400 text-2xl">🔐</span>
-                Câu hỏi bảo mật
-              </h4>
-              <p className="text-base text-orange-200">Hãy trả lời các câu hỏi bảo mật để xác thực danh tính</p>
-            </div>
-            
-            <div className="space-y-6">
-              {forgotPasswordData.questions.map((question, index) => (
-                <div key={index} className="bg-gradient-to-r from-blue-500/5 to-cyan-500/5 border border-blue-400/20 rounded-xl p-6">
-                  <h5 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <span className="w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-sm">{index + 1}</span>
-                    Câu hỏi bảo mật {index + 1}
-                  </h5>
-                  <div>
-                    <label className="block text-base font-semibold text-blue-200 mb-3">
-                      {question}
-                    </label>
-                    <input 
-                      className="w-full border-2 border-blue-400/30 rounded-xl p-4 bg-[#003663]/50 text-white placeholder-blue-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 text-lg" 
-                      placeholder={`Trả lời câu hỏi ${index + 1}`}
-                      value={forgotPasswordData.answers[`a${index + 1}` as keyof typeof forgotPasswordData.answers]}
-                      onChange={e=>setForgotPasswordData({
-                        ...forgotPasswordData, 
-                        answers: { ...forgotPasswordData.answers, [`a${index + 1}`]: e.target.value }
-                      })}
-                    />
-                  </div>
-                </div>
-              ))}
-              
-              <div className="bg-gradient-to-r from-green-500/5 to-emerald-500/5 border border-green-400/20 rounded-xl p-6">
-                <h5 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <span className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-sm">🔑</span>
-                  Mật khẩu mới
-                </h5>
-                <div>
-                  <label className="block text-base font-semibold text-blue-200 mb-3">
-                    Nhập mật khẩu mới
-                  </label>
-                  <input 
-                    className="w-full border-2 border-blue-400/30 rounded-xl p-4 bg-[#003663]/50 text-white placeholder-blue-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 text-lg" 
-                    type="password"
-                    placeholder="Nhập mật khẩu mới"
-                    value={forgotPasswordData.newPassword}
-                    onChange={e=>setForgotPasswordData({...forgotPasswordData, newPassword: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex gap-4">
-              <button 
-                type="button"
-                onClick={() => setForgotPasswordStep('email')}
-                className="flex-1 px-6 py-3 bg-slate-600/50 text-slate-300 rounded-xl font-semibold hover:bg-slate-500/50 transition-all duration-200"
-              >
-                Quay lại
-              </button>
-              <button 
-                type="button"
-                onClick={handleResetPassword}
-                disabled={loading || !forgotPasswordData.answers.a1 || !forgotPasswordData.answers.a2 || !forgotPasswordData.answers.a3 || !forgotPasswordData.newPassword}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {err && (
-          <div className="p-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-600 text-white border-2 border-red-400 shadow-lg">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">❌</span>
-              <span className="font-semibold">{err}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    );
+      if (error) throw error;
+    } catch (e: any) {
+      setErr(e.message || "Đã có lỗi xảy ra khi đăng nhập bằng Google.");
+      setLoading(false);
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Login Form */}
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-blue-200 mb-2">
-              Hãy nhập mã số sinh viên của bạn
-            </label>
-            <input 
-              className="w-full border-2 border-blue-400/30 rounded-lg p-3 bg-[#003663]/50 text-white placeholder-blue-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200" 
-              placeholder="Nhập MSSV (VD: K225123456)" 
-              value={mssv} 
-              onChange={e=>setMssv(e.target.value)} 
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-semibold text-blue-200 mb-2">
-              Mật khẩu của bạn
-            </label>
-            <input 
-              className="w-full border-2 border-blue-400/30 rounded-lg p-3 bg-[#003663]/50 text-white placeholder-blue-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200" 
-              type="password" 
-              placeholder="Nhập mật khẩu" 
-              value={password} 
-              onChange={e=>setPassword(e.target.value)} 
-            />
-          </div>
-        </div>
-        
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-bold text-white mb-2">Đăng nhập</h3>
+        <p className="text-blue-200 text-sm">
+          Sử dụng tài khoản Google để tham gia Diễn đàn FTC
+        </p>
+      </div>
+
+      <div className="space-y-4">
         {err && (
           <div className="p-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-600 text-white border-2 border-red-400 shadow-lg">
             <div className="flex items-center gap-2">
               <span className="text-lg">❌</span>
-              <span className="font-semibold">{err}</span>
+              <span className="font-semibold text-sm">{err}</span>
             </div>
           </div>
         )}
-        
-        <button 
-          disabled={loading} 
-          className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-lg px-6 py-3 font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-        </button>
-      </form>
 
-      {/* Forgot Password Link */}
-      <div className="text-center">
-        <button 
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading}
           type="button"
-          onClick={() => setShowForgotPassword(true)}
-          className="text-blue-300 hover:text-white text-sm underline transition-colors duration-200"
+          className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 rounded-lg px-6 py-3 font-semibold hover:bg-gray-100 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Quên mật khẩu?
+          {loading ? (
+            "Đang kết nối..."
+          ) : (
+            <>
+              {/* Biểu tượng Google SVG */}
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Đăng nhập bằng Google
+            </>
+          )}
         </button>
       </div>
     </div>
