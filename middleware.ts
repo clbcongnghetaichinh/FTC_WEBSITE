@@ -1,35 +1,40 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  // Clone the request headers
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Clone request headers
   const requestHeaders = new Headers(request.headers)
-
-  // Add new request headers
   requestHeaders.set('x-url', request.url)
-  requestHeaders.set('x-pathname', request.nextUrl.pathname)
+  requestHeaders.set('x-pathname', pathname)
 
-  // You can also check for specific conditions
-  const isApiRequest = request.nextUrl.pathname.startsWith('/api')
-  if (isApiRequest) {
-    // Handle API requests
+  if (pathname.startsWith('/api')) {
     requestHeaders.set('x-is-api', '1')
   }
 
-  // Return response with new headers
+  // Protect /admin routes (except /admin/login)
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    const token = request.cookies.get('ftc_admin_session')?.value
+
+    if (!token) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
+    // Note: We don't verify token in middleware (no DB access)
+    // Token is verified in each API route and page-level fetch
+    // For extra security, add edge-compatible token verification here
+  }
+
   return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
+    request: { headers: requestHeaders },
   })
 }
 
-// Configure which paths should be handled by middleware
 export const config = {
   matcher: [
-    // Match all API routes
     '/api/:path*',
-    // Match all pages except static files and api routes
+    '/admin/:path*',
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }
