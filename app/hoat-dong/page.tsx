@@ -1,228 +1,53 @@
 'use client'
 
-import { Navigation } from "@/components/navigation"
-import { Footer } from "@/components/footer"
-import { PageHeader } from "@/components/page-header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Target, Users, BookOpen, TrendingUp, Award, Network, Facebook, Instagram, Calendar, MapPin, Clock, Star, ArrowRight, Sparkles, Zap, Eye, Heart, Trophy, MessageCircle } from "lucide-react"
+import { useEffect, useState } from 'react'
+import { Navigation } from '@/components/navigation'
+import { Footer } from '@/components/footer'
+import { PageHeader } from '@/components/page-header'
+import { Users, Clock, Star, TrendingUp, Sparkles } from 'lucide-react'
 
-const IMAGES = {
-  attacker:
-    "https://cdn.builder.io/api/v1/image/assets%2Fa0639610e72c4f2e81f569a8823b8f03%2F0e6acd0c2f93488b84a94aad542df58f?format=webp&width=800",
-  talkshow:
-    "https://cdn.builder.io/api/v1/image/assets%2Fa0639610e72c4f2e81f569a8823b8f03%2F103c7d4023d24b4ebd5c0ec4044c1575?format=webp&width=800",
-  company:
-    "https://cdn.builder.io/api/v1/image/assets%2Fa0639610e72c4f2e81f569a8823b8f03%2Ffa6a124528964743a92c39b17982f140?format=webp&width=800",
-  training:
-    "https://cdn.builder.io/api/v1/image/assets%2Fa0639610e72c4f2e81f569a8823b8f03%2Fcd52833fa8d84f4f80071cc3932cb03d?format=webp&width=800",
-  workshop:
-    "https://cdn.builder.io/api/v1/image/assets%2Fa0639610e72c4f2e81f569a8823b8f03%2F6e7ddea0b8b8423ba4da6f1fb2d9a04f?format=webp&width=800",
-  trip:
-    "https://cdn.builder.io/api/v1/image/assets%2Fa0639610e72c4f2e81f569a8823b8f03%2F731ef307e97742e3acbaac1f0825407c?format=webp&width=800",
-  career:
-    "https://cdn.builder.io/api/v1/image/assets%2Fa0639610e72c4f2e81f569a8823b8f03%2Fded3c9a981234736972e8d736567ed0a?format=webp&width=800",
+type Activity = {
+  id: string
+  title: string
+  body: string
+  img_url: string
+  alt: string
+  category: string
+  duration: string
+  participants: string
+  status: string
+  highlights: string[]
+  color: string
+  is_published: boolean
 }
 
-const activities = [
-  {
-    title: "CUỘC THI ATTACKER",
-    body:
-      "ATTACKER là cuộc thi học thuật thường niên do FTC tổ chức, thu hút đông đảo sinh viên yêu thích và đam mê công nghệ tài chính. Mỗi mùa thi mang đến một chủ đề mới gắn liền với các xu hướng công nghệ hiện đại, giúp thí sinh rèn luyện tư duy sáng tạo, trải nghiệm thực tế và chinh phục những giải thưởng giá trị. Năm 2025, ATTACKER đã bước vào vòng 3 và đang diễn ra vô cùng kịch tính.",
-    img: IMAGES.attacker,
-    alt: "Cuộc thi ATTACKER của FTC",
-    category: "Học thuật",
-    duration: "3 tháng",
-    participants: "1500+ sinh viên",
-    icon: Award,
-    color: "from-red-500 to-pink-500",
-    bgColor: "bg-red-500/10",
-    borderColor: "border-red-500/20",
-    status: "Đang diễn ra",
-    statusColor: "bg-red-500/20 text-red-300 border-red-400/30",
-    highlights: [
-      "Sân chơi năng động",
-      "Kiến thức FinTech chuyên sâu",
-      "Cơ hội nghề nghiệp hấp dẫn"
-    ]
-  },
-  {
-    title: "TALKSHOW CHUYÊN ĐỀ",
-    body:
-      "Hằng năm, FTC tổ chức nhiều buổi Talkshow xoay quanh các chủ đề FinTech và công nghệ số. Đây là cơ hội để sinh viên giao lưu, lắng nghe chia sẻ từ các chuyên gia đầu ngành và đặt câu hỏi trực tiếp. Một số chương trình tiêu biểu có thể kể đến như: \"Blockchain & AI: Con đường sự nghiệp trong kỷ nguyên số hóa\", \"Chứng khoán thời công nghệ – Tư duy tiếp cận phù hợp\".",
-    img: IMAGES.talkshow,
-    alt: "Talkshow chuyên đề FinTech",
-    category: "Học thuật",
-    duration: "2-3 giờ",
-    participants: "100+ sinh viên",
-    icon: BookOpen,
-    color: "from-blue-500 to-cyan-500",
-    bgColor: "bg-blue-500/10",
-    borderColor: "border-blue-500/20",
-    status: "Thường niên",
-    statusColor: "bg-blue-500/20 text-blue-300 border-blue-400/30",
-    highlights: [
-      "Chuyên gia hàng đầu",
-      "Xu hướng công nghệ mới",
-      "Kết nối mạng lưới"
-    ]
-  },
-  {
-    title: "THAM QUAN DOANH NGHIỆP",
-    body:
-      "FTC hợp tác cùng nhiều doanh nghiệp để tổ chức chương trình tham quan thực tế. Tiêu biểu là chuyến tham quan VNG, nơi các thành viên có cơ hội trải nghiệm môi trường làm việc, tìm hiểu hoạt động công ty và khám phá tiềm năng nghề nghiệp trong lĩnh vực công nghệ tài chính.",
-    img: IMAGES.company,
-    alt: "Chương trình tham quan doanh nghiệp",
-    category: "Trải nghiệm",
-    duration: "1 ngày",
-    participants: "30-50 sinh viên",
-    icon: MapPin,
-    color: "from-green-500 to-emerald-500",
-    bgColor: "bg-green-500/10",
-    borderColor: "border-green-500/20",
-    status: "Sắp diễn ra",
-    statusColor: "bg-green-500/20 text-green-300 border-green-400/30",
-    highlights: [
-      "Trải nghiệm thực tế",
-      "Môi trường làm việc chuyên nghiệp",
-      "Cơ hội nghề nghiệp"
-    ]
-  },
-  {
-    title: "FTC TRAINING & SHARING",
-    body:
-      "Là một câu lạc bộ học thuật, FTC đặc biệt chú trọng hoạt động training nội bộ và chia sẻ kiến thức. Thành viên sẽ được trang bị kiến thức FinTech từ cơ bản đến nâng cao, rèn luyện kỹ năng nghề nghiệp và giải đáp thắc mắc về cơ hội việc làm trong ngành. Ngoài ra, fanpage FTC cũng thường xuyên đăng tải các bài viết hữu ích phục vụ cộng đồng sinh viên.",
-    img: IMAGES.training,
-    alt: "FTC Training & Sharing",
-    category: "Đào tạo",
-    duration: "2-4 giờ",
-    participants: "50+ thành viên",
-    icon: Target,
-    color: "from-purple-500 to-violet-500",
-    bgColor: "bg-purple-500/10",
-    borderColor: "border-purple-500/20",
-    status: "Hằng tuần",
-    statusColor: "bg-purple-500/20 text-purple-300 border-purple-400/30",
-    highlights: [
-      "Kiến thức từ cơ bản đến nâng cao",
-      "Kỹ năng nghề nghiệp thực tế",
-      "Cộng đồng học tập"
-    ]
-  },
-  {
-    title: "CAREER DAY",
-    body:
-      "Chuỗi sự kiện Web3 Career Innovation gồm ba hoạt động chính: Talkshow, doanh nghiệp đặt booth và phỏng vấn trực tiếp. Chương trình hướng đến việc giúp sinh viên tiếp cận công nghệ Blockchain & Web3, thay đổi góc nhìn tiêu cực về Crypto và mở ra cơ hội nghề nghiệp sáng tạo trong lĩnh vực công nghệ - tài chính.",
-    img: IMAGES.career,
-    alt: "Career Day Web3 Career Innovation",
-    category: "Nghề nghiệp",
-    duration: "7 ngày",
-    participants: "3000+ sinh viên",
-    icon: TrendingUp,
-    color: "from-amber-700 to-yellow-800",
-    bgColor: "bg-amber-700/10",
-    borderColor: "border-amber-700/20",
-    status: "Thành công",
-    statusColor: "bg-amber-700/20 text-amber-300 border-amber-600/30",
-    highlights: [
-      "Web3 & Blockchain",
-      "Phỏng vấn trực tiếp",
-      "Cơ hội nghề nghiệp sáng tạo"
-    ]
-  },
-  {
-    title: "WORKSHOP CHUYÊN SÂU",
-    body:
-      "FTC phối hợp cùng các đối tác để tổ chức các buổi workshop và tập huấn. Đây là dịp để sinh viên vừa nâng cao kiến thức chuyên môn, vừa rèn kỹ năng quản lý - tổ chức sự kiện.",
-    img: IMAGES.workshop,
-    alt: "Workshop chuyên sâu của FTC",
-    category: "Đào tạo",
-    duration: "3-4 giờ",
-    participants: "100+ sinh viên",
-    icon: Users,
-    color: "from-indigo-500 to-blue-500",
-    bgColor: "bg-indigo-500/10",
-    borderColor: "border-indigo-500/20",
-    status: "Hằng tháng",
-    statusColor: "bg-indigo-500/20 text-indigo-300 border-indigo-400/30",
-    highlights: [
-      "Kiến thức chuyên môn",
-      "Kỹ năng quản lý sự kiện",
-      "Đối tác uy tín"
-    ]
-  },
-  {
-    title: "FTC TRIP",
-    body:
-      "Bên cạnh các hoạt động học thuật, FTC còn tổ chức các chuyến đi gắn kết cộng đồng. FTC Trip là hoạt động thường niên được mong chờ nhất, nơi các thành viên và cựu thành viên cùng nhau tham gia những chuyến đi 'chữa lành', xả stress và tạo kỷ niệm đáng nhớ. Ngoài ra, còn có nhiều mini trip định kỳ hàng tháng hoặc hàng quý giúp các thành viên kết nối chặt chẽ hơn.",
-    img: IMAGES.trip,
-    alt: "FTC Trip gắn kết cộng đồng",
-    category: "Gắn kết",
-    duration: "2-3 ngày",
-    participants: "30+ thành viên",
-    icon: Network,
-    color: "from-pink-500 to-rose-500",
-    bgColor: "bg-pink-500/10",
-    borderColor: "border-pink-500/20",
-    status: "Sắp tới",
-    statusColor: "bg-pink-500/20 text-pink-300 border-pink-400/30",
-    highlights: [
-      "Gắn kết cộng đồng",
-      "Kỷ niệm đáng nhớ",
-      "Thư giãn và giải tỏa stress"
-    ]
-  },
-]
-
-// Category color mapping
-const categoryColors = {
-  "Học thuật": {
-    gradient: "from-blue-500/20 to-cyan-500/20",
-    border: "border-blue-400/40",
-    icon: "text-white",
-    title: "text-white",
-    dots: ["bg-yellow-400", "bg-cyan-400", "bg-white"],
-    cardGradient: "from-blue-500 to-cyan-500"
-  },
-  "Trải nghiệm": {
-    gradient: "from-green-500/20 to-emerald-500/20",
-    border: "border-green-400/40",
-    icon: "text-white",
-    title: "text-white",
-    dots: ["bg-yellow-400", "bg-orange-400", "bg-white"],
-    cardGradient: "from-green-500 to-emerald-500"
-  },
-  "Đào tạo": {
-    gradient: "from-purple-500/20 to-violet-500/20",
-    border: "border-purple-400/40",
-    icon: "text-white",
-    title: "text-white",
-    dots: ["bg-pink-400", "bg-cyan-400", "bg-white"],
-    cardGradient: "from-purple-500 to-violet-500"
-  },
-  "Nghề nghiệp": {
-    gradient: "from-amber-700/20 to-yellow-800/20",
-    border: "border-amber-600/40",
-    icon: "text-white",
-    title: "text-white",
-    dots: ["bg-red-400", "bg-cyan-400", "bg-white"],
-    cardGradient: "from-amber-700 to-yellow-800"
-  },
-  "Gắn kết": {
-    gradient: "from-pink-500/20 to-rose-500/20",
-    border: "border-pink-400/40",
-    icon: "text-white",
-    title: "text-white",
-    dots: ["bg-yellow-400", "bg-cyan-400", "bg-white"],
-    cardGradient: "from-pink-500 to-rose-500"
-  }
+const CATEGORY_COLORS: Record<string, string> = {
+  'Học thuật': 'from-blue-500 to-cyan-500',
+  'Trải nghiệm': 'from-green-500 to-emerald-500',
+  'Đào tạo': 'from-purple-500 to-violet-500',
+  'Nghề nghiệp': 'from-amber-700 to-yellow-800',
+  'Gắn kết': 'from-pink-500 to-rose-500',
 }
 
 export default function ActivitiesPage() {
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/public/activities')
+      .then(r => r.json())
+      .then(data => {
+        setActivities(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
   return (
     <div className="min-h-screen bg-[#003663] text-white overflow-hidden">
       <Navigation />
 
-      <PageHeader 
+      <PageHeader
         title="HOẠT ĐỘNG CỦA FTC"
         subtitle="Khám phá những sự kiện đặc sắc và hoạt động thú vị của câu lạc bộ"
         showSocialMedia={false}
@@ -235,274 +60,116 @@ export default function ActivitiesPage() {
         badgeShadowColor="shadow-purple-500/10"
       />
 
-      {/* Modern Activities Grid */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid gap-8 lg:gap-12">
-            {activities.map((activity, idx) => {
-              const IconComponent = activity.icon
-              
-            return (
-                <div key={activity.title} className="group relative">
-                  {/* Modern Glassmorphism Card */}
-                  <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 overflow-hidden transition-all duration-700 group-hover:scale-[1.02] group-hover:shadow-2xl group-hover:shadow-blue-500/20 group-hover:border-blue-400/30">
-                    
-                    {/* Animated Background Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                    
-                    <div className="relative z-10 p-6 lg:p-8">
-                      {/* Header Section - Redesigned Layout */}
-                      <div className="flex flex-col lg:flex-row gap-6 mb-8">
-                        
-                        {/* Enhanced Image Section */}
-                        {activity.img && (
-                          <div className="lg:w-2/5">
-                            <div className="relative h-[280px] lg:h-[320px] overflow-hidden rounded-3xl shadow-2xl group-hover:shadow-blue-500/20 transition-all duration-700">
-                              <img
-                                src={activity.img}
-                                alt={activity.alt}
-                            loading="lazy"
-                                className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110 ${activity.title === "TALKSHOW CHUYÊN ĐỀ" ? "rotate-180" : ""}`}
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          {loading ? (
+            <div className="flex items-center justify-center py-32">
+              <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            </div>
+          ) : activities.length === 0 ? (
+            <div className="text-center py-32 text-white/40">
+              <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>Chưa có hoạt động nào được đăng.</p>
+            </div>
+          ) : (
+            <div className="grid gap-8 lg:gap-12">
+              {activities.map((activity) => {
+                const gradient = CATEGORY_COLORS[activity.category] || 'from-blue-500 to-cyan-500'
+                return (
+                  <div key={activity.id} className="group relative">
+                    <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 overflow-hidden transition-all duration-700 group-hover:scale-[1.02] group-hover:shadow-2xl group-hover:shadow-blue-500/20 group-hover:border-blue-400/30">
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+                      <div className="relative z-10 p-6 lg:p-8">
+                        <div className="flex flex-col lg:flex-row gap-6 mb-8">
+                          {activity.img_url && (
+                            <div className="lg:w-2/5">
+                              <div className="relative h-[280px] lg:h-[320px] overflow-hidden rounded-3xl shadow-2xl">
+                                <img
+                                  src={activity.img_url}
+                                  alt={activity.alt || activity.title}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        
-                        {/* Enhanced Info Section */}
-                        <div className="lg:w-3/5 flex flex-col justify-center space-y-4">
-                          {/* Category and Meta Info */}
-                          <div className="flex flex-wrap items-center gap-3 mb-3">
-                          <div className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-xl border shadow-lg text-white ${
-                            activity.category === "Học thuật" ? "bg-gradient-to-r from-blue-500 to-cyan-500" :
-                            activity.category === "Trải nghiệm" ? "bg-gradient-to-r from-green-500 to-emerald-500" :
-                            activity.category === "Đào tạo" ? "bg-gradient-to-r from-purple-500 to-violet-500" :
-                            activity.category === "Nghề nghiệp" ? "bg-gradient-to-r from-amber-700 to-yellow-800" :
-                            activity.category === "Gắn kết" ? "bg-gradient-to-r from-pink-500 to-rose-500" :
-                            "bg-gradient-to-r from-blue-500 to-purple-600"
-                          }`}>
-                            {activity.category}
-                          </div>
-                            <div className="flex items-center gap-2 text-white/80 bg-white/10 backdrop-blur-xl px-3 py-2 rounded-full border border-white/20 shadow-lg">
-                              <Clock className="w-4 h-4" />
-                              <span className="text-xs font-medium">{activity.duration}</span>
+                          )}
+
+                          <div className={`${activity.img_url ? 'lg:w-3/5' : 'w-full'} flex flex-col justify-center space-y-4`}>
+                            <div className="flex flex-wrap items-center gap-3 mb-3">
+                              <div className={`px-4 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r ${gradient}`}>
+                                {activity.category}
+                              </div>
+                              {activity.duration && (
+                                <div className="flex items-center gap-2 text-white/80 bg-white/10 px-3 py-2 rounded-full border border-white/20">
+                                  <Clock className="w-4 h-4" />
+                                  <span className="text-xs font-medium">{activity.duration}</span>
+                                </div>
+                              )}
+                              {activity.participants && (
+                                <div className="flex items-center gap-2 text-white/80 bg-white/10 px-3 py-2 rounded-full border border-white/20">
+                                  <Users className="w-4 h-4" />
+                                  <span className="text-xs font-medium">{activity.participants}</span>
+                                </div>
+                              )}
                             </div>
-                            <div className="flex items-center gap-2 text-white/80 bg-white/10 backdrop-blur-xl px-3 py-2 rounded-full border border-white/20 shadow-lg">
-                              <Users className="w-4 h-4" />
-                              <span className="text-xs font-medium">{activity.participants}</span>
-                            </div>
-                          </div>
-                          
-                          {/* Modern Compact Title with Icon */}
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-lg">
-                              <IconComponent className="w-4 h-4 text-white drop-shadow-lg" />
-                            </div>
+
                             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent leading-tight">
                               {activity.title}
                             </h2>
+
+                            {activity.status && (
+                              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-white/70 border border-white/20 w-fit">
+                                {activity.status}
+                              </span>
+                            )}
                           </div>
-                          
-                          {/* Quick Features */}
-                          <div className="flex flex-wrap gap-2">
-                            <div className="flex items-center gap-2 text-xs text-white/80 bg-white/5 backdrop-blur-sm px-2 py-1.5 rounded-full border border-white/20">
-                              <Star className="w-3 h-3 text-blue-400" />
-                              <span>Chuyên môn</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-white/80 bg-white/5 backdrop-blur-sm px-2 py-1.5 rounded-full border border-white/20">
-                              <Users className="w-3 h-3 text-purple-400" />
-                              <span>Cộng đồng</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-white/80 bg-white/5 backdrop-blur-sm px-2 py-1.5 rounded-full border border-white/20">
-                              <TrendingUp className="w-3 h-3 text-green-400" />
-                              <span>Phát triển</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                          <div className="lg:col-span-3">
+                            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className="w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse" />
+                                <h3 className="text-lg font-bold text-white">Mô tả chi tiết</h3>
+                              </div>
+                              <p className="text-white/90 leading-relaxed text-base font-light text-justify">
+                                {activity.body}
+                              </p>
                             </div>
                           </div>
+
+                          {activity.highlights?.filter(Boolean).length > 0 && (
+                            <div>
+                              <div className={`bg-gradient-to-br ${gradient} rounded-2xl p-6 border border-white/20 shadow-xl h-full`}>
+                                <div className="flex items-center gap-2 mb-4">
+                                  <Star className="w-5 h-5 text-white" />
+                                  <span className="text-sm font-bold text-white">Điểm nổi bật</span>
+                                </div>
+                                <div className="space-y-3">
+                                  {activity.highlights.filter(Boolean).map((h, i) => (
+                                    <div key={i} className="flex items-center gap-3 text-white">
+                                      <div className="w-2 h-2 bg-white/70 rounded-full" />
+                                      <span className="text-xs font-medium">{h}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      
-                      {/* Enhanced Content Section */}
-                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {/* Main Description - Larger Column */}
-                        <div className="lg:col-span-3">
-                          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse" />
-                              <h3 className="text-lg font-bold text-white">Mô tả chi tiết</h3>
-                            </div>
-                            <p className="text-white/90 leading-relaxed text-base font-light text-justify">
-                              {activity.body}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Enhanced Sidebar */}
-                        <div className="space-y-4">
-                          {/* Highlights Card */}
-                          <div className={`bg-gradient-to-br ${categoryColors[activity.category as keyof typeof categoryColors]?.cardGradient || 'from-blue-500 to-cyan-500'} rounded-2xl p-6 border ${categoryColors[activity.category as keyof typeof categoryColors]?.border || 'border-blue-400/40'} shadow-xl h-full`}>
-                            <div className="flex items-center gap-2 mb-4">
-                              <Star className={`w-5 h-5 ${categoryColors[activity.category as keyof typeof categoryColors]?.icon || 'text-white'}`} />
-                              <span className={`text-sm font-bold ${categoryColors[activity.category as keyof typeof categoryColors]?.title || 'text-white'}`}>Điểm nổi bật</span>
-                            </div>
-                            <div className="space-y-3">
-                              {activity.highlights?.map((highlight, index) => {
-                                const colors = categoryColors[activity.category as keyof typeof categoryColors]?.dots || ['bg-blue-300', 'bg-cyan-300', 'bg-indigo-300'];
-                                return (
-                                  <div key={index} className="flex items-center gap-3 text-white">
-                                    <div className={`w-2 h-2 ${colors[index % colors.length]} rounded-full animate-pulse shadow-lg`} />
-                                    <span className="text-xs font-medium">{highlight}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          
-                        </div>
-                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )
-          })}
-          </div>
-        </div>
-      </section>
-
-      {/* Call to Action Section - Split Layout */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Side - Main CTA */}
-            <div className="relative bg-gradient-to-br from-yellow-500/20 to-amber-500/20 backdrop-blur-xl rounded-3xl border border-yellow-400/30 p-10 shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 animate-pulse"></div>
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-amber-400"></div>
-              
-              <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <Trophy className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-3xl font-bold text-white">THÀNH TÍCH NỔI BẬT</h3>
-                    <p className="text-yellow-200 text-lg">Những thành tựu đáng tự hào</p>
-                  </div>
-                </div>
-                
-                <p className="text-white/90 mb-8 leading-relaxed text-lg italic">
-                  Khám phá những thành tích và giải thưởng mà câu lạc bộ đã đạt được trong suốt quá trình phát triển
-                </p>
-                
-                <a 
-                  href="/thanh-tich"
-                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-2xl text-white font-bold hover:shadow-xl hover:scale-105 transition-all duration-300 hover:shadow-yellow-500/25"
-                >
-                  <Trophy className="w-6 h-6" />
-                  <span>Xem chi tiết thành tích</span>
-                  <ArrowRight className="w-5 h-5" />
-                </a>
-              </div>
+                )
+              })}
             </div>
-
-            {/* Right Side - Secondary CTAs */}
-            <div className="space-y-6">
-              {/* Cơ cấu */}
-              <div className="group relative bg-gradient-to-r from-emerald-500/20 to-teal-500/20 backdrop-blur-xl rounded-2xl border border-emerald-400/30 p-6 shadow-xl hover:scale-105 transition-all duration-300 hover:shadow-emerald-500/20">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-xl font-bold text-white mb-2">Cơ cấu</h4>
-                    <p className="text-white/80 text-sm italic">Tổ chức và cấu trúc</p>
-                  </div>
-                  <a 
-                    href="/co-cau"
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl text-white font-semibold hover:shadow-lg transition-all duration-300"
-                  >
-                    Xem
-                  </a>
-                </div>
-              </div>
-
-              {/* Diễn đàn */}
-              <div className="group relative bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-xl rounded-2xl border border-orange-400/30 p-6 shadow-xl hover:scale-105 transition-all duration-300 hover:shadow-orange-500/20">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <MessageCircle className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-xl font-bold text-white mb-2">Diễn đàn</h4>
-                    <p className="text-white/80 text-sm italic">Thảo luận và chia sẻ</p>
-                  </div>
-                  <a 
-                    href="/dien-dan"
-                    className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl text-white font-semibold hover:shadow-lg transition-all duration-300"
-                  >
-                    Xem
-                  </a>
-                </div>
-              </div>
-
-              {/* Chatbot */}
-              <div className="group relative bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-xl rounded-2xl border border-blue-400/30 p-6 shadow-xl hover:scale-105 transition-all duration-300 hover:shadow-blue-500/20">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <BookOpen className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-xl font-bold text-white mb-2">Chatbot AI</h4>
-                    <p className="text-white/80 text-sm italic">Trợ lý thông minh 24/7</p>
-                  </div>
-                  <a 
-                    href="/chatbot"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl text-white font-semibold hover:shadow-lg transition-all duration-300"
-                  >
-                    Xem
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
       <Footer />
-
-      {/* Custom Animations */}
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) rotate(0deg); }
-          50% { transform: translate(-20px, 20px) rotate(5deg); }
-        }
-        @keyframes float-reverse {
-          0%, 100% { transform: translate(0, 0) rotate(0deg); }
-          50% { transform: translate(20px, -20px) rotate(-5deg); }
-        }
-        @keyframes blink {
-          0%, 50%, 100% { opacity: 1; }
-          25%, 75% { opacity: 0.8; }
-        }
-        @keyframes gradient-shift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        @keyframes float-particle {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        .animate-float {
-          animation: float 20s ease-in-out infinite;
-        }
-        .animate-float-reverse {
-          animation: float-reverse 20s ease-in-out infinite;
-        }
-        .animate-float-particle {
-          animation: float-particle 3s ease-in-out infinite;
-        }
-        .animation-delay-300 {
-          animation-delay: 300ms;
-        }
-      `}</style>
     </div>
   )
 }
