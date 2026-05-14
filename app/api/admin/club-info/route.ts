@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { verifyAdminSession, SESSION_COOKIE_NAME } from '@/lib/admin-auth'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
@@ -24,5 +25,8 @@ export async function PUT(req: NextRequest) {
   )
   const errors = results.filter(r => r.error)
   if (errors.length > 0) return NextResponse.json({ error: 'Some updates failed' }, { status: 500 })
+  revalidatePath('/')
+  revalidatePath('/thong-tin')
+  revalidatePath('/api/public/club-info')
   return NextResponse.json({ success: true })
 }

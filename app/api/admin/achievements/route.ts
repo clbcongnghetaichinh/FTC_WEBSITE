@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { verifyAdminSession, SESSION_COOKIE_NAME } from '@/lib/admin-auth'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
@@ -19,6 +20,8 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { data, error } = await supabaseAdmin.from('achievements').insert(body).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  revalidatePath('/thanh-tich')
+  revalidatePath('/api/public/achievements')
   return NextResponse.json(data, { status: 201 })
 }
 
@@ -28,6 +31,8 @@ export async function PUT(req: NextRequest) {
   const { id, ...fields } = body
   const { data, error } = await supabaseAdmin.from('achievements').update(fields).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  revalidatePath('/thanh-tich')
+  revalidatePath('/api/public/achievements')
   return NextResponse.json(data)
 }
 
@@ -36,5 +41,7 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json()
   const { error } = await supabaseAdmin.from('achievements').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  revalidatePath('/thanh-tich')
+  revalidatePath('/api/public/achievements')
   return NextResponse.json({ success: true })
 }
