@@ -5,9 +5,9 @@ export const revalidate = 60
 
 export async function GET() {
   const { data, error } = await supabaseAdmin
-    .from('achievements')
+    .from('members')
     .select('*')
-    .eq('is_published', true)
+    .eq('is_active', true)
     .order('sort_order')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -5,14 +5,16 @@ export const revalidate = 60
 
 export async function GET() {
   const { data, error } = await supabaseAdmin
-    .from('achievements')
+    .from('club_info')
     .select('*')
-    .eq('is_published', true)
-    .order('sort_order')
+    .order('key')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json(data, {
+  // Convert array [{key, value}] → object {key: value} for easy consumption
+  const info = Object.fromEntries((data ?? []).map((r: { key: string; value: string }) => [r.key, r.value]))
+
+  return NextResponse.json(info, {
     headers: {
       'Cache-Control': 's-maxage=60, stale-while-revalidate=300',
     },
