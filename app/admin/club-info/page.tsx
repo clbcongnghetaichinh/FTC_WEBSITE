@@ -2,17 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, AlertCircle, CheckCircle, Info } from 'lucide-react'
+import { Save, Info } from 'lucide-react'
+import { useToast } from '@/components/admin/Toast'
+import { useAdminLang } from '@/context/AdminLangContext'
 
 type InfoItem = { id: string; key: string; value: string; label: string }
 
+/**
+ * Club Info — Dạng form inline (không phải danh sách CRUD)
+ * Dữ liệu được lưu toàn bộ cùng 1 lần qua PUT
+ * Không dùng useAdminCrud vì logic khác biệt
+ */
 export default function AdminClubInfoPage() {
   const router = useRouter()
+  const { t } = useAdminLang()
+  const toast = useToast()
+
   const [items, setItems] = useState<InfoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
 
   async function load() {
     setLoading(true)
@@ -25,45 +33,64 @@ export default function AdminClubInfoPage() {
   useEffect(() => { load() }, [])
 
   function update(key: string, value: string) {
-    setItems(items.map(item => item.key === key ? {...item, value} : item))
+    setItems(prev => prev.map(item => item.key === key ? { ...item, value } : item))
   }
 
   async function saveAll() {
-    setSaving(true); setError(''); setSaved(false)
+    setSaving(true)
     try {
       const r = await fetch('/api/admin/club-info', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(items.map(({ key, value }) => ({ key, value })))
+        body: JSON.stringify(items.map(({ key, value }) => ({ key, value }))),
       })
-      if (!r.ok) { setError('Lưu thất bại, thử lại'); return }
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
-    } finally { setSaving(false) }
+      if (!r.ok) { toast.error(t('error_save')); return }
+      toast.success(t('saved_ok'))
+    } catch {
+      toast.error('Lỗi kết nối mạng')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const groups = [
-    { title: 'Thông tin cơ bản', keys: ['club_name', 'slogan'] },
+    { title: t('nav_club_info') + ' — Cơ bản', keys: ['club_name', 'slogan'] },
     { title: 'Mạng xã hội & Liên hệ', keys: ['facebook_url', 'instagram_url', 'email', 'phone', 'address'] },
     { title: 'Số liệu thống kê', keys: ['member_count', 'project_count', 'partner_count', 'event_count'] },
   ]
 
-  if (loading) return <div className="text-center py-20 text-white/30">Đang tải...</div>
+  if (loading) return (
+    <div className="space-y-4">
+      {[1,2,3].map(i => (
+        <div key={i} className="bg-white/5 border border-white/8 rounded-2xl p-6 animate-pulse">
+          <div className="h-4 bg-white/10 rounded w-1/4 mb-5" />
+          <div className="space-y-3">
+            {[1,2].map(j => <div key={j} className="h-10 bg-white/5 rounded-xl" />)}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
+  const INPUT = 'w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-pink-500/50 transition-all placeholder-white/20'
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-black text-white">Thông tin CLB</h1>
+          <h1 className="text-xl font-black text-white">{t('club_info.title')}</h1>
           <p className="text-white/40 text-sm mt-0.5">Cập nhật thông tin hiển thị trên website</p>
         </div>
-        <button onClick={saveAll} disabled={saving} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 rounded-xl text-white text-sm font-semibold hover:from-pink-400 hover:to-rose-500 disabled:opacity-40 transition-all shadow-lg">
-          {saving ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Đang lưu...</> : <><Save className="w-4 h-4" />Lưu tất cả</>}
+        <button
+          onClick={saveAll}
+          disabled={saving}
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 rounded-xl text-white text-sm font-semibold hover:from-pink-400 hover:to-rose-500 disabled:opacity-40 transition-all shadow-lg"
+        >
+          {saving
+            ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t('saving')}</>
+            : <><Save className="w-4 h-4" />{t('save')}</>}
         </button>
       </div>
-
-      {error && <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-sm flex items-center gap-2"><AlertCircle className="w-4 h-4" />{error}</div>}
-      {saved && <div className="mb-4 px-4 py-3 rounded-xl bg-green-500/20 border border-green-500/30 text-green-300 text-sm flex items-center gap-2"><CheckCircle className="w-4 h-4" />Đã lưu thành công!</div>}
 
       <div className="space-y-6">
         {groups.map(group => {
@@ -78,19 +105,22 @@ export default function AdminClubInfoPage() {
               <div className="space-y-4">
                 {groupItems.map(item => (
                   <div key={item.key}>
-                    <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">{item.label || item.key}</label>
-                    {item.key === 'slogan' ? (
+                    <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">
+                      {item.label || item.key}
+                    </label>
+                    {item.key === 'slogan' || item.key === 'address' ? (
                       <textarea
                         value={item.value}
                         onChange={e => update(item.key, e.target.value)}
                         rows={2}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-pink-500/50 transition-all placeholder-white/20 resize-none"
+                        className={INPUT + ' resize-none'}
                       />
                     ) : (
                       <input
                         value={item.value}
                         onChange={e => update(item.key, e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-pink-500/50 transition-all placeholder-white/20"
+                        className={INPUT}
+                        type={item.key.includes('count') ? 'number' : item.key.includes('url') || item.key === 'email' ? 'url' : 'text'}
                       />
                     )}
                   </div>
@@ -104,7 +134,8 @@ export default function AdminClubInfoPage() {
       <div className="mt-6 bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex gap-3">
         <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
         <p className="text-blue-300/70 text-xs leading-relaxed">
-          Các thay đổi sẽ được lưu vào Supabase và hiển thị trên website ngay sau khi bạn nhấn <strong className="text-blue-300">"Lưu tất cả"</strong>. Đảm bảo các trang frontend đã được cập nhật để đọc dữ liệu từ API thay vì hardcode.
+          Các thay đổi được lưu vào Supabase và hiển thị lên website sau vài giây (cache 60s).
+          Nhấn <strong className="text-blue-300">“Lưu”</strong> để áp dụng tất cả thay đổi cùng lúc.
         </p>
       </div>
     </div>
