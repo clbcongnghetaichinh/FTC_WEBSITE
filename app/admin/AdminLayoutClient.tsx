@@ -1,3 +1,12 @@
+/**
+ * AdminLayoutClient — Sidebar + Layout wrapper cho toàn bộ admin
+ *
+ * Thay đổi so với bản cũ:
+ *  - Thêm ToastProvider (toast notification toàn cục)
+ *  - Thêm AdminLangProvider (song ngữ EN/VI)
+ *  - Thêm LangToggle vào cuối sidebar
+ *  - Labels sidebar lấy từ t() thay vì hardcode tiếng Việt
+ */
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -7,29 +16,30 @@ import {
   LayoutDashboard, Calendar, Users, Trophy, UserPlus, Info,
   LogOut, Menu, X, ChevronRight, Zap, Shield, Building2
 } from 'lucide-react'
-import { LangProvider, useLang } from '@/context/AdminLangContext'
+import { ToastProvider } from '@/components/admin/Toast'
+import { AdminLangProvider, useAdminLang } from '@/context/AdminLangContext'
+import { LangToggle } from '@/components/admin/LangToggle'
 
-// Sidebar nav items — label key maps to dict
-const navItems = [
-  { href: '/admin',             labelKey: 'dashboard',    icon: LayoutDashboard, exact: true },
-  { href: '/admin/activities',  labelKey: 'activities',   icon: Calendar },
-  { href: '/admin/departments', labelKey: 'departments',  icon: Building2 },
-  { href: '/admin/members',     labelKey: 'members',      icon: Users },
-  { href: '/admin/achievements',labelKey: 'achievements', icon: Trophy },
-  { href: '/admin/recruitment', labelKey: 'recruitment',  icon: UserPlus },
-  { href: '/admin/club-info',   labelKey: 'club_info',    icon: Info },
-]
-
-function AdminSidebar({ children }: { children: React.ReactNode }) {
+function AdminSidebarContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { lang, toggle, t } = useLang()
+  const { t } = useAdminLang()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => { setSidebarOpen(false) }, [pathname])
 
   if (pathname === '/admin/login') return <>{children}</>
+
+  const navItems = [
+    { href: '/admin',              label: t('nav_dashboard'),    icon: LayoutDashboard, exact: true },
+    { href: '/admin/activities',   label: t('nav_activities'),   icon: Calendar },
+    { href: '/admin/departments',  label: t('nav_departments'),  icon: Building2 },
+    { href: '/admin/members',      label: t('nav_members'),      icon: Users },
+    { href: '/admin/achievements', label: t('nav_achievements'), icon: Trophy },
+    { href: '/admin/recruitment',  label: t('nav_recruitment'),  icon: UserPlus },
+    { href: '/admin/club-info',    label: t('nav_club_info'),    icon: Info },
+  ]
 
   const isActive = (item: typeof navItems[0]) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href)
@@ -46,6 +56,7 @@ function AdminSidebar({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#001829] flex">
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 lg:hidden"
@@ -72,7 +83,7 @@ function AdminSidebar({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        {/* Nav */}
+        {/* Nav items */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map(item => {
             const active = isActive(item)
@@ -88,43 +99,35 @@ function AdminSidebar({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-cyan-400' : ''}`} />
-                {t(item.labelKey)}
+                {item.label}
                 {active && <ChevronRight className="w-3 h-3 ml-auto text-cyan-400" />}
               </Link>
             )
           })}
         </nav>
 
-        {/* Footer: lang toggle + logout + view site */}
-        <div className="px-3 py-4 border-t border-white/5 space-y-1">
+        {/* Bottom section */}
+        <div className="px-3 py-4 border-t border-white/5 space-y-2">
           {/* Language toggle */}
-          <button
-            onClick={toggle}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/40 hover:text-white/70 hover:bg-white/5 transition-all duration-200"
-          >
-            <span className="text-base">{lang === 'vi' ? '🆻🇳' : '🇺🇸'}</span>
-            <span>{lang === 'vi' ? 'Tiếng Việt' : 'English'}</span>
-            <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-md">
-              {lang === 'vi' ? 'EN' : 'VI'}
-            </span>
-          </button>
+          <div className="px-1">
+            <LangToggle />
+          </div>
 
-          {/* Logout */}
           <button
             onClick={handleLogout}
             disabled={loggingOut}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
           >
             <LogOut className="w-4 h-4" />
-            {loggingOut ? t('loggingOut') : t('logout')}
+            {loggingOut ? t('logging_out') : t('logout')}
           </button>
 
-          {/* View site */}
           <Link
             href="/"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-white/30 hover:text-white/50 transition-all"
           >
-            <Zap className="w-3 h-3" /> {t('view_site')}
+            <Zap className="w-3 h-3" />
+            {t('view_site')}
           </Link>
         </div>
       </aside>
@@ -137,10 +140,6 @@ function AdminSidebar({ children }: { children: React.ReactNode }) {
             <Menu className="w-5 h-5" />
           </button>
           <span className="text-white font-bold text-sm">FTC Admin</span>
-          {/* Mobile lang toggle */}
-          <button onClick={toggle} className="ml-auto text-lg">
-            {lang === 'vi' ? '🆻🇳' : '🇺🇸'}
-          </button>
         </header>
 
         <main className="flex-1 p-4 lg:p-8">{children}</main>
@@ -149,11 +148,12 @@ function AdminSidebar({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Wrapper: provides LangProvider at layout level
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   return (
-    <LangProvider>
-      <AdminSidebar>{children}</AdminSidebar>
-    </LangProvider>
+    <AdminLangProvider>
+      <ToastProvider>
+        <AdminSidebarContent>{children}</AdminSidebarContent>
+      </ToastProvider>
+    </AdminLangProvider>
   )
 }
