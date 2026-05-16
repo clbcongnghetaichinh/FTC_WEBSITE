@@ -1,24 +1,23 @@
 /**
- * Public API — Lấy danh sách thành viên đang hoạt động
- * Cache 60s, stale-while-revalidate 5 phút
+ * Public API — Lấy mùa tuyển dụng đang mở
+ * Cache 30s vì dữ liệu hay thay đổi hơn
  */
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export const revalidate = 60
+export const revalidate = 30
 
 export async function GET() {
   const { data, error } = await supabaseAdmin
-    .from('members')
+    .from('recruitment')
     .select('*')
-    .eq('is_active', true)
-    .order('sort_order')
+    .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json(data, {
     headers: {
-      'Cache-Control': 's-maxage=60, stale-while-revalidate=300',
+      'Cache-Control': 's-maxage=30, stale-while-revalidate=120',
     },
   })
 }

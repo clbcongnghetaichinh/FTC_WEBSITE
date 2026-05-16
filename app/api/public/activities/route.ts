@@ -1,7 +1,11 @@
+/**
+ * Public API — Lấy danh sách hoạt động đã publish
+ * Dùng supabaseAdmin (service role) để bypass RLS
+ * Cache 60s + stale-while-revalidate 5 phút
+ */
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-// Cache 60s on CDN/Next.js, serve stale up to 5min while revalidating
 export const revalidate = 60
 
 export async function GET() {
