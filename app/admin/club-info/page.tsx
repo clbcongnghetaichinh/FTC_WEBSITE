@@ -1,142 +1,198 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, Info } from 'lucide-react'
-import { useToast } from '@/components/admin/Toast'
-import { useAdminLang } from '@/context/AdminLangContext'
+import { Save, Info, RefreshCw } from 'lucide-react'
+import { ToastContainer } from '@/components/admin/Toast'
+import { useToast } from '@/components/admin/useToast'
+import { useLang } from '@/context/AdminLangContext'
 
-type InfoItem = { id: string; key: string; value: string; label: string }
+type InfoRow = { key: string; value: string; label: string; type?: 'text'|'textarea'|'number'|'url' }
 
-/**
- * Club Info — Dạng form inline (không phải danh sách CRUD)
- * Dữ liệu được lưu toàn bộ cùng 1 lần qua PUT
- * Không dùng useAdminCrud vì logic khác biệt
- */
-export default function AdminClubInfoPage() {
+// Map key -> display label + input type
+const FIELD_META: Record<string, { label: string; type?: InfoRow['type'] }> = {
+  club_name:     { label: 'Ten cau lac bo' },
+  slogan:        { label: 'Slogan', type: 'textarea' },
+  email:         { label: 'Email', type: 'text' },
+  phone:         { label: 'So dien thoai' },
+  address:       { label: 'Dia chi', type: 'textarea' },
+  facebook_url:  { label: 'Facebook URL', type: 'url' },
+  youtube_url:   { label: 'YouTube URL', type: 'url' },
+  instagram_url: { label: 'Instagram URL', type: 'url' },
+  website_url:   { label: 'Website URL', type: 'url' },
+  member_count:  { label: 'So thanh vien', type: 'number' },
+  project_count: { label: 'So du an', type: 'number' },
+  partner_count: { label: 'So doi tac', type: 'number' },
+  event_count:   { label: 'So su kien', type: 'number' },
+  founded_year:  { label: 'Nam thanh lap', type: 'number' },
+  about:         { label: 'Gioi thieu CLB', type: 'textarea' },
+  mission:       { label: 'Su menh', type: 'textarea' },
+  vision:        { label: 'Tam nhin', type: 'textarea' },
+}
+
+// Group keys by section
+const SECTIONS = [
+  { title: 'Thong tin co ban', keys: ['club_name','slogan','founded_year','about'] },
+  { title: 'Lien he', keys: ['email','phone','address'] },
+  { title: 'Mang xa hoi', keys: ['facebook_url','youtube_url','instagram_url','website_url'] },
+  { title: 'Thong ke', keys: ['member_count','project_count','partner_count','event_count'] },
+  { title: 'Su menh & Tam nhin', keys: ['mission','vision'] },
+]
+
+const INPUT_BASE = 'w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all placeholder-white/20'
+
+export default function AdminClubInfoPage(){
   const router = useRouter()
-  const { t } = useAdminLang()
-  const toast = useToast()
+  const {t} = useLang()
+  const {toasts,addToast,dismiss} = useToast()
+  const [rows,setRows] = useState<Record<string,string>>({})
+  const [original,setOriginal] = useState<Record<string,string>>({})
+  const [loading,setLoading] = useState(true)
+  const [saving,setSaving] = useState(false)
 
-  const [items, setItems] = useState<InfoItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-
-  async function load() {
+  const load = useCallback(async()=>{
     setLoading(true)
-    const r = await fetch('/api/admin/club-info')
-    if (r.status === 401) { router.push('/admin/login'); return }
-    setItems(await r.json())
-    setLoading(false)
-  }
+    try{
+      const r = await fetch('/api/admin/club-info')
+      if(r.status===401){router.push('/admin/login');return}
+      const data: {key:string;value:string}[] = await r.json()
+      const map = Object.fromEntries(data.map(d=>[d.key,d.value]))
+      setRows(map)
+      setOriginal(map)
+    }finally{setLoading(false)}
+  },[router])
 
-  useEffect(() => { load() }, [])
+  useEffect(()=>{load()},[load])
 
-  function update(key: string, value: string) {
-    setItems(prev => prev.map(item => item.key === key ? { ...item, value } : item))
-  }
+  const isDirty = JSON.stringify(rows) !== JSON.stringify(original)
 
-  async function saveAll() {
+  async function save(){
     setSaving(true)
-    try {
-      const r = await fetch('/api/admin/club-info', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(items.map(({ key, value }) => ({ key, value }))),
+    try{
+      const updates = Object.entries(rows).map(([key,value])=>({key,value}))
+      const r = await fetch('/api/admin/club-info',{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(updates),
       })
-      if (!r.ok) { toast.error(t('error_save')); return }
-      toast.success(t('saved_ok'))
-    } catch {
-      toast.error('Lỗi kết nối mạng')
-    } finally {
-      setSaving(false)
-    }
+      if(!r.ok){
+        const json = await r.json()
+        addToast('error',json.error||t('save_error'))
+        return
+      }
+      setOriginal({...rows})
+      addToast('success',t('saved_ok'))
+    }catch{addToast('error',t('save_error'))}
+    finally{setSaving(false)}
   }
 
-  const groups = [
-    { title: t('nav_club_info') + ' — Cơ bản', keys: ['club_name', 'slogan'] },
-    { title: 'Mạng xã hội & Liên hệ', keys: ['facebook_url', 'instagram_url', 'email', 'phone', 'address'] },
-    { title: 'Số liệu thống kê', keys: ['member_count', 'project_count', 'partner_count', 'event_count'] },
-  ]
+  function reset(){
+    setRows({...original})
+  }
 
-  if (loading) return (
-    <div className="space-y-4">
-      {[1,2,3].map(i => (
-        <div key={i} className="bg-white/5 border border-white/8 rounded-2xl p-6 animate-pulse">
-          <div className="h-4 bg-white/10 rounded w-1/4 mb-5" />
-          <div className="space-y-3">
-            {[1,2].map(j => <div key={j} className="h-10 bg-white/5 rounded-xl" />)}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
+  function set(key:string,value:string){
+    setRows(prev=>({...prev,[key]:value}))
+  }
 
-  const INPUT = 'w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-pink-500/50 transition-all placeholder-white/20'
+  if(loading){
+    return(
+      <div className="space-y-4">
+        {Array.from({length:4}).map((_,i)=><div key={i} className="h-24 rounded-2xl bg-white/5 animate-pulse"/>)}
+      </div>
+    )
+  }
 
-  return (
+  return(
     <div>
+      <ToastContainer toasts={toasts} onDismiss={dismiss}/>
+
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-black text-white">{t('club_info.title')}</h1>
-          <p className="text-white/40 text-sm mt-0.5">Cập nhật thông tin hiển thị trên website</p>
+          <h1 className="text-xl font-black text-white flex items-center gap-2">
+            <Info className="w-5 h-5 text-indigo-400"/>{t('club_info')}
+          </h1>
+          <p className="text-white/40 text-sm mt-0.5">Thong tin hien thi ra website public</p>
         </div>
-        <button
-          onClick={saveAll}
-          disabled={saving}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 rounded-xl text-white text-sm font-semibold hover:from-pink-400 hover:to-rose-500 disabled:opacity-40 transition-all shadow-lg"
-        >
-          {saving
-            ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t('saving')}</>
-            : <><Save className="w-4 h-4" />{t('save')}</>}
-        </button>
+        <div className="flex gap-2">
+          {isDirty&&(
+            <button onClick={reset}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white text-sm transition-all">
+              <RefreshCw className="w-4 h-4"/> Reset
+            </button>
+          )}
+          <button onClick={save} disabled={saving||!isDirty}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-xl text-white text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-all shadow-lg">
+            {saving?<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>{t('saving')}</>:<><Save className="w-4 h-4"/>{t('save')}</>}
+          </button>
+        </div>
       </div>
 
+      {isDirty&&(
+        <div className="mb-6 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
+          Co thay doi chua duoc luu. Nhan Luu de ap dung.
+        </div>
+      )}
+
       <div className="space-y-6">
-        {groups.map(group => {
-          const groupItems = items.filter(item => group.keys.includes(item.key))
-          if (groupItems.length === 0) return null
-          return (
-            <div key={group.title} className="bg-white/5 border border-white/8 rounded-2xl p-6">
-              <h2 className="text-white font-bold text-sm mb-5 flex items-center gap-2">
-                <div className="w-1.5 h-4 rounded-full bg-gradient-to-b from-pink-500 to-rose-600" />
-                {group.title}
-              </h2>
+        {SECTIONS.map(section=>{
+          const sectionKeys = section.keys.filter(k=>k in rows || k in FIELD_META)
+          if(sectionKeys.length===0) return null
+          return(
+            <div key={section.title} className="bg-white/5 border border-white/[0.08] rounded-2xl p-5">
+              <h2 className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4">{section.title}</h2>
               <div className="space-y-4">
-                {groupItems.map(item => (
-                  <div key={item.key}>
-                    <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">
-                      {item.label || item.key}
-                    </label>
-                    {item.key === 'slogan' || item.key === 'address' ? (
-                      <textarea
-                        value={item.value}
-                        onChange={e => update(item.key, e.target.value)}
-                        rows={2}
-                        className={INPUT + ' resize-none'}
-                      />
-                    ) : (
-                      <input
-                        value={item.value}
-                        onChange={e => update(item.key, e.target.value)}
-                        className={INPUT}
-                        type={item.key.includes('count') ? 'number' : item.key.includes('url') || item.key === 'email' ? 'url' : 'text'}
-                      />
-                    )}
+                {sectionKeys.map(key=>{
+                  const meta = FIELD_META[key]
+                  if(!meta) return null
+                  const val = rows[key]??''
+                  const isTextarea = meta.type==='textarea'
+                  return(
+                    <div key={key}>
+                      <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">
+                        {t(key)||meta.label}
+                      </label>
+                      {isTextarea?(
+                        <textarea
+                          value={val}
+                          onChange={e=>set(key,e.target.value)}
+                          rows={3}
+                          className={INPUT_BASE}
+                        />
+                      ):(
+                        <input
+                          type={meta.type||'text'}
+                          value={val}
+                          onChange={e=>set(key,e.target.value)}
+                          className={INPUT_BASE}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+
+        {/* Keys not in any section */}
+        {(()=>{
+          const allSectionKeys = SECTIONS.flatMap(s=>s.keys)
+          const extra = Object.keys(rows).filter(k=>!allSectionKeys.includes(k))
+          if(extra.length===0) return null
+          return(
+            <div className="bg-white/5 border border-white/[0.08] rounded-2xl p-5">
+              <h2 className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4">Khac</h2>
+              <div className="space-y-4">
+                {extra.map(key=>(
+                  <div key={key}>
+                    <label className="block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5">{key}</label>
+                    <input type="text" value={rows[key]??''} onChange={e=>set(key,e.target.value)} className={INPUT_BASE}/>
                   </div>
                 ))}
               </div>
             </div>
           )
-        })}
-      </div>
-
-      <div className="mt-6 bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex gap-3">
-        <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-        <p className="text-blue-300/70 text-xs leading-relaxed">
-          Các thay đổi được lưu vào Supabase và hiển thị lên website sau vài giây (cache 60s).
-          Nhấn <strong className="text-blue-300">“Lưu”</strong> để áp dụng tất cả thay đổi cùng lúc.
-        </p>
+        })()}
       </div>
     </div>
   )
