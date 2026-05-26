@@ -5,6 +5,7 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/Input"
+import { AttackerSection } from "@/components/attacker" 
 import { 
   ArrowRight, 
   Users, 
@@ -384,7 +385,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
+            <AttackerSection />
       {/* Activity Gallery Section */}
       <section className="py-16 sm:py-20 md:py-24 px-3 sm:px-4 md:px-6 lg:px-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-card/5 via-card/10 to-card/5"></div>
